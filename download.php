@@ -8,12 +8,12 @@ if($argc < 2) {
 $url = $argv[1];
 
 $feed = new SimplePie();
+$feed->enable_cache(false);
 $feed->set_feed_url($url);
 if(!$feed->init()) {
     die($feed->error()."\n");
 }
 
-$count = 0;
 foreach($feed->get_items() as $item) {
     /** @var SimplePie_Item $item */
 
@@ -23,10 +23,14 @@ foreach($feed->get_items() as $item) {
     foreach($enclosures as $enclosure) {
         /** @var SimplePie_Enclosure $enclosure */
 
-        $ext  = $enclosure->get_extension();
-        $url  = $enclosure->get_link();
-        $mime = $enclosure->get_type();
+        $url = $enclosure->get_link();
+        if(preg_match('/soup\.io/', $url)) {
+            // soup.io's "normal" RSS feed resizes all enclosures to 400px, we want the full glory
+            $url = preg_replace('/_400\./', '.', $url);
+        }
         $hash = md5($url);
+        $mime = $enclosure->get_type();
+        $ext  = $enclosure->get_extension();
         $dir  = substr($hash, 0, 1);
         $path = 'data/'.$dir.'/'.$hash.'.'.$ext;
 
@@ -36,7 +40,7 @@ foreach($feed->get_items() as $item) {
         if(file_exists($out)) continue;
         @mkdir(dirname($out), 0777, true);
 
-        echo "Fetching $url...";
+        echo "Fetching $url to $path...";
         $data = file_get_contents($url);
         if($data) {
             // store data
@@ -49,8 +53,4 @@ foreach($feed->get_items() as $item) {
         }
         echo " failed.\n";
     }
-
-    //if($count++ > 10) break;
 }
-
-
