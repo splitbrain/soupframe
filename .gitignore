@@ -1,0 +1,15 @@
+# Idea IDE
+*.iml
+.idea
+
+# Composer
+vendor
+composer.lock
+composer.phar
+
+# our data stuff
+data
+index.txt
+
+# test RSS
+*.rss
